@@ -35,6 +35,7 @@ Optional flags:
 - `--endpoint-connect tcp://127.0.0.1:5557`
 - `--topic kv-events`
 - `--no-token-decode` (skip tokenizer decoding for token labels)
+- `--gpu-memory-utilization 0.9` (lower this on busy/shared GPUs if vLLM startup fails due limited free VRAM)
 
 ## Notes
 

@@ -8,6 +8,8 @@ class VLLMEngine:
         kv_events_endpoint="tcp://*:5557",
         kv_events_topic="kv-events",
         enable_prefix_caching=True,
+        gpu_memory_utilization=0.9,
+        num_gpu_blocks_override=None,
     ):
         kv_events_config = {
             "enable_kv_cache_events": True,
@@ -20,6 +22,8 @@ class VLLMEngine:
             model=model_name,
             tensor_parallel_size=1,  # increase if multi-GPU
             enable_prefix_caching=enable_prefix_caching,
+            gpu_memory_utilization=gpu_memory_utilization,
+            num_gpu_blocks_override=num_gpu_blocks_override,
             kv_events_config=kv_events_config,
         )
 
