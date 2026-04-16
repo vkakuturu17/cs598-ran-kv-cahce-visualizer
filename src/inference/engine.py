@@ -2,10 +2,25 @@ from vllm import LLM, SamplingParams
 
 
 class VLLMEngine:
-    def __init__(self, model_name="mistralai/Mistral-7B-v0.1"):
+    def __init__(
+        self,
+        model_name="mistralai/Mistral-7B-v0.1",
+        kv_events_endpoint="tcp://*:5557",
+        kv_events_topic="kv-events",
+        enable_prefix_caching=True,
+    ):
+        kv_events_config = {
+            "enable_kv_cache_events": True,
+            "publisher": "zmq",
+            "endpoint": kv_events_endpoint,
+            "topic": kv_events_topic,
+        }
+
         self.llm = LLM(
             model=model_name,
             tensor_parallel_size=1,  # increase if multi-GPU
+            enable_prefix_caching=enable_prefix_caching,
+            kv_events_config=kv_events_config,
         )
 
     def generate(self, prompts, max_tokens=50):
