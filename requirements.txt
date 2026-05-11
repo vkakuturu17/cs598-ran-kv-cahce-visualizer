@@ -4,3 +4,6 @@ transformers
 msgspec
 pyzmq
 plotly
+requests
+pandas
+matplotlib
