@@ -125,7 +125,6 @@ def render_html_report(
             href=\"https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap\"
             rel=\"stylesheet\"
         />
-        <script src=\"https://cdn.plot.ly/plotly-2.30.0.min.js\"></script>
         <style>
             :root {{
                 color-scheme: dark;
@@ -199,7 +198,7 @@ def render_html_report(
             }}
             .cards {{
                 display: grid;
-                grid-template-columns: repeat(5, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 12px;
                 margin-bottom: 24px;
             }}
@@ -264,6 +263,28 @@ def render_html_report(
                 gap: 16px;
                 margin-bottom: 20px;
             }}
+            .block-grid {{
+                display: grid;
+                grid-template-columns: repeat(var(--cols, 12), 1fr);
+                gap: 6px;
+            }}
+            .block-cell {{
+                aspect-ratio: 1 / 1;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background: #0f1823;
+                transition: transform 0.2s ease, background 0.2s ease;
+            }}
+            .block-cell.filled {{
+                background: var(--accent);
+                border-color: rgba(47, 184, 172, 0.7);
+                box-shadow: 0 0 12px rgba(47, 184, 172, 0.35);
+                transform: translateY(-2px);
+            }}
+            .block-cell.selected {{
+                outline: 2px solid var(--accent-warm);
+                outline-offset: 2px;
+            }}
             .panel {{
                 background: var(--card);
                 border: 1px solid var(--border);
@@ -290,6 +311,28 @@ def render_html_report(
                 flex-wrap: wrap;
                 gap: 6px;
                 font-size: 12px;
+            }}
+            .token-compare {{
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }}
+            .token-heading {{
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                color: var(--muted);
+                font-size: 12px;
+                margin-bottom: 6px;
+            }}
+            .token-heading strong {{
+                color: var(--text);
+                font-size: 13px;
+            }}
+            .token-hint {{
+                color: var(--muted);
+                font-size: 12px;
+                margin-top: 8px;
             }}
             .token-chip {{
                 border: 1px solid var(--border);
@@ -342,8 +385,6 @@ def render_html_report(
             </header>
 
             <section class=\"cards\">
-                <div class=\"card\"><h3>Fills</h3><strong id=\"card-fills\">0</strong></div>
-                <div class=\"card\"><h3>Evictions</h3><strong id=\"card-evicts\">0</strong></div>
                 <div class=\"card\"><h3>Current Live</h3><strong id=\"card-live\">0</strong></div>
                 <div class=\"card\"><h3>Current Fill %</h3><strong id=\"card-fill-rate\">0%</strong></div>
                 <div class=\"card\"><h3>Event Index</h3><strong id=\"card-index\">0</strong></div>
@@ -369,8 +410,8 @@ def render_html_report(
 
             <section class=\"grid\">
                 <div class=\"panel\">
-                    <h3>Lifecycle Timeline</h3>
-                    <div id=\"timeline\" style=\"height: 520px;\"></div>
+                    <h3>KV Blocks <span style=\"color: var(--muted);\" id=\"block-capacity\"></span></h3>
+                    <div id=\"block-grid\" class=\"block-grid\"></div>
                 </div>
                 <div class=\"panel\">
                     <h3>Current Event</h3>
@@ -394,18 +435,39 @@ def render_html_report(
 
             <section class=\"grid\">
                 <div class=\"panel\">
-                    <h3>Token Preview</h3>
-                    <div class=\"token-list\" id=\"token-list\"></div>
+                    <h3>Block Tokens</h3>
+                    <div class=\"token-compare\">
+                        <div>
+                            <div class=\"token-heading\">
+                                <strong>Current event</strong>
+                                <span id=\"token-source-current\">--</span>
+                            </div>
+                            <div class=\"token-list\" id=\"token-list-current\"></div>
+                        </div>
+                        <div>
+                            <div class=\"token-heading\">
+                                <strong>Selected block</strong>
+                                <span id=\"token-source-selected\">None</span>
+                            </div>
+                            <div class=\"token-list\" id=\"token-list-selected\"></div>
+                        </div>
+                    </div>
+                    <div class=\"token-hint\">Format: token_id: decoded_token</div>
                 </div>
                 <div class=\"panel\">
-                    <h3>Top Tokens</h3>
+                    <h3>All-time Stats</h3>
+                    <div class=\"kv-list\" style=\"margin-bottom: 12px;\">
+                        <div>Fills</div><span id=\"stat-fills\">0</span>
+                        <div>Evictions</div><span id=\"stat-evicts\">0</span>
+                        <div>Lifecycle Events</div><span id=\"stat-events\">0</span>
+                    </div>
                     <div class=\"top-tokens\">
                         <div>
-                            <strong style=\"color: var(--accent);\">Filled</strong>
+                            <strong style=\"color: var(--accent);\">Top Filled</strong>
                             <ul id=\"top-filled\"></ul>
                         </div>
                         <div>
-                            <strong style=\"color: var(--accent-warm);\">Evicted</strong>
+                            <strong style=\"color: var(--accent-warm);\">Top Evicted</strong>
                             <ul id=\"top-evicted\"></ul>
                         </div>
                     </div>
@@ -439,8 +501,9 @@ def render_html_report(
             document.getElementById("meta-batches").textContent = formatValue(summary.num_batches);
             document.getElementById("meta-events").textContent = lifecycle.length;
             document.getElementById("meta-live").textContent = formatValue(summary.num_live_blocks);
-            document.getElementById("card-fills").textContent = formatValue(summary.num_fills);
-            document.getElementById("card-evicts").textContent = formatValue(summary.num_evictions);
+            document.getElementById("stat-fills").textContent = formatValue(summary.num_fills);
+            document.getElementById("stat-evicts").textContent = formatValue(summary.num_evictions);
+            document.getElementById("stat-events").textContent = String(lifecycle.length);
 
             const slider = document.getElementById("event-slider");
             const maxIndex = Math.max(lifecycle.length - 1, 0);
@@ -451,21 +514,103 @@ def render_html_report(
             const cumEvicts = [];
             const liveBlocks = [];
             const liveSet = new Set();
+            const liveHashesByIndex = [];
+            const liveSlotsByIndex = [];
+            const slotMapByIndex = [];
+            const blockOrder = [];
+            const blockIndex = new Map();
+            const blockTokensByHash = new Map();
             let fills = 0;
             let evicts = 0;
+            const capacityBlocks = summary.kv_capacity_blocks || null;
+            const slotForBlock = new Map();
+            const slotOrder = [];
+            const freeSlots = capacityBlocks ? Array.from({ length: capacityBlocks }, (_, i) => i) : [];
 
             lifecycle.forEach((event) => {
                 if (event.action === "fill") {
                     fills += 1;
+                    if (!blockIndex.has(event.block_hash)) {
+                        blockIndex.set(event.block_hash, blockOrder.length);
+                        blockOrder.push(event.block_hash);
+                    }
+                    if (!blockTokensByHash.has(event.block_hash)) {
+                        blockTokensByHash.set(event.block_hash, event.token_ids || []);
+                    }
                     liveSet.add(event.block_hash);
+
+                    if (capacityBlocks) {
+                        if (!slotForBlock.has(event.block_hash)) {
+                            let slot = freeSlots.shift();
+                            if (slot === undefined) {
+                                const evictedHash = slotOrder.shift();
+                                if (evictedHash !== undefined) {
+                                    slot = slotForBlock.get(evictedHash);
+                                    slotForBlock.delete(evictedHash);
+                                }
+                            }
+                            if (slot !== undefined) {
+                                slotForBlock.set(event.block_hash, slot);
+                                slotOrder.push(event.block_hash);
+                            }
+                        }
+                    }
                 } else {
                     evicts += 1;
                     liveSet.delete(event.block_hash);
+
+                    if (capacityBlocks) {
+                        const slot = slotForBlock.get(event.block_hash);
+                        if (slot !== undefined) {
+                            slotForBlock.delete(event.block_hash);
+                            freeSlots.push(slot);
+                            const orderIndex = slotOrder.indexOf(event.block_hash);
+                            if (orderIndex >= 0) {
+                                slotOrder.splice(orderIndex, 1);
+                            }
+                        }
+                    }
                 }
                 cumFills.push(fills);
                 cumEvicts.push(evicts);
                 liveBlocks.push(liveSet.size);
+                liveHashesByIndex.push(new Set(liveSet));
+                if (capacityBlocks) {
+                    liveSlotsByIndex.push(new Set(slotForBlock.values()));
+                    const slotMap = new Map();
+                    slotForBlock.forEach((slot, blockHash) => {
+                        slotMap.set(slot, blockHash);
+                    });
+                    slotMapByIndex.push(slotMap);
+                }
             });
+
+            const blockGrid = document.getElementById("block-grid");
+            const maxLive = liveBlocks.length ? Math.max(...liveBlocks) : 0;
+            const totalBlocks = Math.max(capacityBlocks || blockOrder.length, 1);
+            const gridColumns = Math.min(16, Math.max(6, Math.ceil(Math.sqrt(totalBlocks))));
+            blockGrid.style.setProperty("--cols", String(gridColumns));
+            blockGrid.innerHTML = "";
+            const gridCells = [];
+            let selectedBlockIndex = null;
+            const totalCells = totalBlocks;
+            const capacityLabel = document.getElementById("block-capacity");
+            capacityLabel.textContent = capacityBlocks ? "(capacity: " + String(capacityBlocks) + ")" : "";
+            for (let i = 0; i < totalCells; i += 1) {
+                const cell = document.createElement("div");
+                cell.className = "block-cell";
+                cell.title = "Block " + String(i + 1);
+                cell.addEventListener("click", () => {
+                    if (selectedBlockIndex === i) {
+                        selectedBlockIndex = null;
+                    } else {
+                        selectedBlockIndex = i;
+                    }
+                    updateEvent(Number(slider.value));
+                });
+                blockGrid.appendChild(cell);
+                gridCells.push(cell);
+            }
 
             const buildTopTokens = (list, containerId) => {
                 const container = document.getElementById(containerId);
@@ -483,69 +628,19 @@ def render_html_report(
             buildTopTokens(payload.top_filled_tokens || [], "top-filled");
             buildTopTokens(payload.top_evicted_tokens || [], "top-evicted");
 
-            const fillX = [];
-            const fillY = [];
-            const fillHover = [];
-            const evictX = [];
-            const evictY = [];
-            const evictHover = [];
-
-            lifecycle.forEach((event) => {
-                const hover =
-                    "tokens=[" + tokenPreview(event.token_ids || [], 24) + "]<br>" +
-                    "group=" + formatValue(event.group_idx) + "<br>" +
-                    "medium=" + formatValue(event.medium);
-                if (event.action === "fill") {
-                    fillX.push(event.event_index);
-                    fillY.push(event.block_hash);
-                    fillHover.push(hover);
-                } else {
-                    evictX.push(event.event_index);
-                    evictY.push(event.block_hash);
-                    evictHover.push(hover);
-                }
-            });
-
-            const plotData = [
-                {
-                    x: fillX,
-                    y: fillY,
-                    mode: "markers",
-                    marker: { color: "#2fb8ac", size: 8, symbol: "circle" },
-                    name: "Fill",
-                    hovertext: fillHover,
-                    hoverinfo: "text+x+y",
-                },
-                {
-                    x: evictX,
-                    y: evictY,
-                    mode: "markers",
-                    marker: { color: "#f97316", size: 9, symbol: "x" },
-                    name: "Evict",
-                    hovertext: evictHover,
-                    hoverinfo: "text+x+y",
-                },
-                {
-                    x: [],
-                    y: [],
-                    mode: "markers",
-                    marker: { color: "#f59e0b", size: 14, symbol: "diamond" },
-                    name: "Current",
-                    hoverinfo: "skip",
-                },
-            ];
-
-            const plotLayout = {
-                paper_bgcolor: "rgba(0,0,0,0)",
-                plot_bgcolor: "rgba(0,0,0,0)",
-                xaxis: { title: "Event index", gridcolor: "#1f2a36" },
-                yaxis: { title: "Block hash", gridcolor: "#1f2a36" },
-                height: 500,
-                margin: { l: 60, r: 20, t: 20, b: 50 },
-                legend: { orientation: "h", y: 1.05, x: 0 },
+            const tokenListCurrent = document.getElementById("token-list-current");
+            const tokenListSelected = document.getElementById("token-list-selected");
+            const tokenSourceCurrent = document.getElementById("token-source-current");
+            const tokenSourceSelected = document.getElementById("token-source-selected");
+            const renderTokenList = (target, tokenIds) => {
+                target.innerHTML = "";
+                (tokenIds || []).slice(0, 120).forEach((tokenId) => {
+                    const chip = document.createElement("span");
+                    chip.className = "token-chip";
+                    chip.textContent = tokenLabel(tokenId);
+                    target.appendChild(chip);
+                });
             };
-
-            Plotly.newPlot("timeline", plotData, plotLayout, { displayModeBar: false, responsive: true });
 
             const updateEvent = (index) => {
                 const event = lifecycle[index];
@@ -569,29 +664,41 @@ def render_html_report(
                 const fillRate = event.action === "fill" ? ((cumFills[index] / Math.max(1, index + 1)) * 100) : ((cumFills[index] / Math.max(1, index + 1)) * 100);
                 document.getElementById("card-fill-rate").textContent = fillRate.toFixed(1) + "%";
 
-                const tokenList = document.getElementById("token-list");
-                tokenList.innerHTML = "";
-                (event.token_ids || []).slice(0, 120).forEach((tokenId) => {
-                    const chip = document.createElement("span");
-                    chip.className = "token-chip";
-                    chip.textContent = tokenLabel(tokenId);
-                    tokenList.appendChild(chip);
-                });
+                tokenSourceCurrent.textContent = "Event " + String(index);
+                renderTokenList(tokenListCurrent, event.token_ids || []);
 
-                Plotly.restyle("timeline", { x: [[event.event_index]], y: [[event.block_hash]] }, [2]);
-                Plotly.relayout("timeline", {
-                    shapes: [
-                        {
-                            type: "line",
-                            x0: event.event_index,
-                            x1: event.event_index,
-                            y0: 0,
-                            y1: 1,
-                            yref: "paper",
-                            line: { color: "#f59e0b", width: 1, dash: "dot" },
-                        },
-                    ],
-                });
+                if (selectedBlockIndex !== null) {
+                    let blockHash = null;
+                    if (capacityBlocks) {
+                        const slotMap = slotMapByIndex[index];
+                        blockHash = slotMap ? slotMap.get(selectedBlockIndex) : null;
+                    } else {
+                        blockHash = blockOrder[selectedBlockIndex] || null;
+                    }
+
+                    if (blockHash) {
+                        const tokenIds = blockTokensByHash.get(blockHash) || [];
+                        tokenSourceSelected.textContent = "Block " + String(selectedBlockIndex + 1);
+                        renderTokenList(tokenListSelected, tokenIds);
+                    } else {
+                        tokenSourceSelected.textContent = "Empty slot";
+                        renderTokenList(tokenListSelected, []);
+                    }
+                } else {
+                    tokenSourceSelected.textContent = "None";
+                    renderTokenList(tokenListSelected, []);
+                }
+
+                const liveAtIndex = capacityBlocks
+                    ? (liveSlotsByIndex[index] || new Set())
+                    : (liveHashesByIndex[index] || new Set());
+                for (let i = 0; i < gridCells.length; i += 1) {
+                    const filled = capacityBlocks
+                        ? liveAtIndex.has(i)
+                        : (blockOrder[i] && liveAtIndex.has(blockOrder[i]));
+                    gridCells[i].classList.toggle("filled", Boolean(filled));
+                    gridCells[i].classList.toggle("selected", i === selectedBlockIndex);
+                }
             };
 
             const stepBack = document.getElementById("step-back");

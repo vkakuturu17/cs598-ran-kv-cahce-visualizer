@@ -140,6 +140,12 @@ def main() -> None:
         default=None,
         help="Optional vLLM KV block capacity override for eviction experiments.",
     )
+    parser.add_argument(
+        "--max-model-len",
+        type=int,
+        default=None,
+        help="Optional max model sequence length to fit in available KV cache.",
+    )
     args = parser.parse_args()
 
     if not (0.0 < args.gpu_memory_utilization <= 1.0):
@@ -149,6 +155,8 @@ def main() -> None:
         raise ValueError("--num-prompts must be >= 1.")
     if args.num_gpu_blocks_override is not None and args.num_gpu_blocks_override < 1:
         raise ValueError("--num-gpu-blocks-override must be >= 1.")
+    if args.max_model_len is not None and args.max_model_len < 1:
+        raise ValueError("--max-model-len must be >= 1.")
 
     prompts = get_prompts(args.prompt_profile, args.num_prompts)
 
@@ -162,6 +170,7 @@ def main() -> None:
         enable_prefix_caching=True,
         gpu_memory_utilization=args.gpu_memory_utilization,
         num_gpu_blocks_override=args.num_gpu_blocks_override,
+        max_model_len=args.max_model_len,
     )
 
     outputs = engine.generate(prompts, max_tokens=args.max_tokens)
@@ -175,6 +184,9 @@ def main() -> None:
     collector.write_jsonl(args.events_out)
 
     lifecycle, summary = build_token_lifecycle(collector.events)
+
+    if args.num_gpu_blocks_override is not None:
+        summary["kv_capacity_blocks"] = args.num_gpu_blocks_override
 
     token_decode_lookup = None
     if not args.no_token_decode:

@@ -10,6 +10,7 @@ class VLLMEngine:
         enable_prefix_caching=True,
         gpu_memory_utilization=0.9,
         num_gpu_blocks_override=None,
+        max_model_len=None,
     ):
         kv_events_config = {
             "enable_kv_cache_events": True,
@@ -24,6 +25,7 @@ class VLLMEngine:
             enable_prefix_caching=enable_prefix_caching,
             gpu_memory_utilization=gpu_memory_utilization,
             num_gpu_blocks_override=num_gpu_blocks_override,
+            max_model_len=max_model_len,
             kv_events_config=kv_events_config,
         )
 
