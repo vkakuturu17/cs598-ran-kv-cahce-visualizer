@@ -1,0 +1,9 @@
+{
+  "name": "exact_repeats",
+  "description": "Identical prompt sent multiple times. After the first request the full prompt is cached, so all subsequent requests should show maximum cache hit rate.",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "host": "localhost",
+  "port": 8000,
+  "num_prompts": 6,
+  "started_at": "20260516_214258"
+}

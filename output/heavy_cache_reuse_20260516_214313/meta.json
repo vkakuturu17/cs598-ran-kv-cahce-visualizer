@@ -1,0 +1,9 @@
+{
+  "name": "heavy_cache_reuse",
+  "description": "A very long shared technical document as the context prefix (~700 tokens), followed by 30 varied questions and 6 exact repeats. Designed to maximise KV-cache block reuse \u2014 nearly every request should show a large cached_tokens count after the first.",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "host": "localhost",
+  "port": 8000,
+  "num_prompts": 20,
+  "started_at": "20260516_214313"
+}

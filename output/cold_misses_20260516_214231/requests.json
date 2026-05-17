@@ -1,0 +1,102 @@
+[
+  {
+    "id": "cold_misses_0",
+    "latency_s": 1.484,
+    "prompt_tokens": 44,
+    "completion_tokens": 150,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 0: B-tree vs LSM-tree trade-offs",
+    "timestamp": "2026-05-17T02:42:34.494446"
+  },
+  {
+    "id": "cold_misses_1",
+    "latency_s": 1.452,
+    "prompt_tokens": 41,
+    "completion_tokens": 150,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 1: MVCC in PostgreSQL",
+    "timestamp": "2026-05-17T02:42:36.447101"
+  },
+  {
+    "id": "cold_misses_2",
+    "latency_s": 1.453,
+    "prompt_tokens": 42,
+    "completion_tokens": 150,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 2: Write-ahead logging in SQLite",
+    "timestamp": "2026-05-17T02:42:38.400419"
+  },
+  {
+    "id": "cold_misses_3",
+    "latency_s": 1.451,
+    "prompt_tokens": 43,
+    "completion_tokens": 150,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 3: Copy-on-write in ZFS",
+    "timestamp": "2026-05-17T02:42:40.351619"
+  },
+  {
+    "id": "cold_misses_4",
+    "latency_s": 1.45,
+    "prompt_tokens": 44,
+    "completion_tokens": 150,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 4: Extent-based allocation in ext4",
+    "timestamp": "2026-05-17T02:42:42.302183"
+  },
+  {
+    "id": "cold_misses_5",
+    "latency_s": 1.382,
+    "prompt_tokens": 42,
+    "completion_tokens": 143,
+    "cached_tokens": 32,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 5: Log-structured file systems",
+    "timestamp": "2026-05-17T02:42:44.185226"
+  },
+  {
+    "id": "cold_misses_6",
+    "latency_s": 1.449,
+    "prompt_tokens": 42,
+    "completion_tokens": 150,
+    "cached_tokens": 16,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 6: Bloom filters in RocksDB",
+    "timestamp": "2026-05-17T02:42:46.135193"
+  },
+  {
+    "id": "cold_misses_7",
+    "latency_s": 1.449,
+    "prompt_tokens": 40,
+    "completion_tokens": 150,
+    "cached_tokens": 16,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 7: Hybrid logical clocks",
+    "timestamp": "2026-05-17T02:42:48.084669"
+  },
+  {
+    "id": "cold_misses_8",
+    "latency_s": 1.45,
+    "prompt_tokens": 44,
+    "completion_tokens": 150,
+    "cached_tokens": 16,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 8: Linearizability vs serializability",
+    "timestamp": "2026-05-17T02:42:50.035727"
+  },
+  {
+    "id": "cold_misses_9",
+    "latency_s": 1.45,
+    "prompt_tokens": 42,
+    "completion_tokens": 150,
+    "cached_tokens": 16,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Explain concept 9: The CAP theorem revisited",
+    "timestamp": "2026-05-17T02:42:51.986068"
+  }
+]

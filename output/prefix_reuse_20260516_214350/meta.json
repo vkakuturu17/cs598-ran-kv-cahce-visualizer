@@ -1,0 +1,9 @@
+{
+  "name": "prefix_reuse",
+  "description": "Same long shared context prefix, different questions each time. The shared prefix fills several KV-cache blocks and gets reused across requests.",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "host": "localhost",
+  "port": 8000,
+  "num_prompts": 8,
+  "started_at": "20260516_214350"
+}

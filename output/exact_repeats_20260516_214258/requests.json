@@ -1,0 +1,62 @@
+[
+  {
+    "id": "exact_repeats_0",
+    "latency_s": 0.647,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:01.139754"
+  },
+  {
+    "id": "exact_repeats_1",
+    "latency_s": 0.615,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:02.255695"
+  },
+  {
+    "id": "exact_repeats_2",
+    "latency_s": 0.615,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:03.371149"
+  },
+  {
+    "id": "exact_repeats_3",
+    "latency_s": 0.614,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:04.486057"
+  },
+  {
+    "id": "exact_repeats_4",
+    "latency_s": 0.614,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:05.600183"
+  },
+  {
+    "id": "exact_repeats_5",
+    "latency_s": 0.613,
+    "prompt_tokens": 82,
+    "completion_tokens": 63,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "timestamp": "2026-05-17T02:43:06.713349"
+  }
+]

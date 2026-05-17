@@ -1,0 +1,15 @@
+{
+  "name": "prefix_reuse",
+  "description": "Same long shared context prefix, different questions each time. The shared prefix fills several KV-cache blocks and gets reused across requests.",
+  "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+  "prompts": [
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What happens during a node failure?",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does rebalancing work when a new node joins?",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Explain the read path for a key lookup.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What is the write amplification factor here?",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does the cluster handle network partitions?",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Describe the compaction strategy.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What are the latency implications of 3 replicas?",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does leader election work in Raft here?"
+  ]
+}

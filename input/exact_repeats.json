@@ -1,0 +1,13 @@
+{
+  "name": "exact_repeats",
+  "description": "Identical prompt sent multiple times. After the first request the full prompt is cached, so all subsequent requests should show maximum cache hit rate.",
+  "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+  "prompts": [
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph.",
+    "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Summarize the architecture in one paragraph."
+  ]
+}

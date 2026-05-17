@@ -1,0 +1,17 @@
+{
+  "name": "cold_misses",
+  "description": "Unique prompts with no shared prefix. Every request is a cache miss. Used as a latency baseline.",
+  "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+  "prompts": [
+    "Explain concept 0: B-tree vs LSM-tree trade-offs",
+    "Explain concept 1: MVCC in PostgreSQL",
+    "Explain concept 2: Write-ahead logging in SQLite",
+    "Explain concept 3: Copy-on-write in ZFS",
+    "Explain concept 4: Extent-based allocation in ext4",
+    "Explain concept 5: Log-structured file systems",
+    "Explain concept 6: Bloom filters in RocksDB",
+    "Explain concept 7: Hybrid logical clocks",
+    "Explain concept 8: Linearizability vs serializability",
+    "Explain concept 9: The CAP theorem revisited"
+  ]
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "prefix_reuse_0",
+    "latency_s": 1.469,
+    "prompt_tokens": 80,
+    "completion_tokens": 150,
+    "cached_tokens": 64,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What happens during a node failure?",
+    "timestamp": "2026-05-17T02:43:53.693359"
+  },
+  {
+    "id": "prefix_reuse_1",
+    "latency_s": 1.449,
+    "prompt_tokens": 85,
+    "completion_tokens": 150,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does rebalancing work when a new node joins?",
+    "timestamp": "2026-05-17T02:43:55.643326"
+  },
+  {
+    "id": "prefix_reuse_2",
+    "latency_s": 1.45,
+    "prompt_tokens": 82,
+    "completion_tokens": 150,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Explain the read path for a key lookup.",
+    "timestamp": "2026-05-17T02:43:57.593676"
+  },
+  {
+    "id": "prefix_reuse_3",
+    "latency_s": 0.325,
+    "prompt_tokens": 82,
+    "completion_tokens": 33,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What is the write amplification factor here?",
+    "timestamp": "2026-05-17T02:43:58.418996"
+  },
+  {
+    "id": "prefix_reuse_4",
+    "latency_s": 1.448,
+    "prompt_tokens": 81,
+    "completion_tokens": 150,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does the cluster handle network partitions?",
+    "timestamp": "2026-05-17T02:44:00.367548"
+  },
+  {
+    "id": "prefix_reuse_5",
+    "latency_s": 1.449,
+    "prompt_tokens": 79,
+    "completion_tokens": 150,
+    "cached_tokens": 64,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: Describe the compaction strategy.",
+    "timestamp": "2026-05-17T02:44:02.317112"
+  },
+  {
+    "id": "prefix_reuse_6",
+    "latency_s": 1.449,
+    "prompt_tokens": 83,
+    "completion_tokens": 150,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: What are the latency implications of 3 replicas?",
+    "timestamp": "2026-05-17T02:44:04.266449"
+  },
+  {
+    "id": "prefix_reuse_7",
+    "latency_s": 1.449,
+    "prompt_tokens": 83,
+    "completion_tokens": 150,
+    "cached_tokens": 80,
+    "system_prompt": "You are an expert assistant in distributed systems and storage. Answer concisely and technically.",
+    "user_prompt": "Context: A distributed key-value store uses consistent hashing with virtual nodes to distribute data across a cluster of 16 nodes. Each node stores 3 replicas. The cluster uses Raft for consensus.\n\nQuestion: How does leader election work in Raft here?",
+    "timestamp": "2026-05-17T02:44:06.215853"
+  }
+]

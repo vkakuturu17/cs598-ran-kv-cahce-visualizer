@@ -1,0 +1,4 @@
+requests
+pandas
+matplotlib
+transformers      # tokenizer for token→block mapping (already installed via vLLM)
