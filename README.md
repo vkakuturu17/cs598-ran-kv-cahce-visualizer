@@ -1,4 +1,4 @@
-# cs598-ran-kv-cahce-visualizer
+# cs598-ran-kv-cache-visualizer
 
 Build on top of vLLM and visualize when KV cache blocks are filled and evicted.
 
