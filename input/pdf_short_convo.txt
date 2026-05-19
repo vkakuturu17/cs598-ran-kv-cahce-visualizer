@@ -1,0 +1,24 @@
+# Example input for kv-cache-studio
+# Demo workload: one large PDF + three small PDFs
+# Replace paths with your own files.
+
+P This workload tests how KV cache behavior changes when a user uploads one large document and then several smaller related documents.
+
+U ./pdfs/large_llm_inference_survey.pdf
+P Summarize the large PDF with a focus on inference cost and memory usage.
+P Explain why this large PDF likely causes a large prefill cost and large KV cache growth.
+
+U ./pdfs/small_vllm_pagedattention.pdf
+P Summarize this small PDF and connect it to the large PDF.
+P How does vLLM reduce KV cache memory waste?
+
+U ./pdfs/small_prefix_caching.pdf
+P Summarize this small PDF and explain when prefix caching helps.
+P Would this workload benefit from prefix caching? Why or why not?
+
+U ./pdfs/small_cache_eviction.pdf
+P Summarize this small PDF and explain how eviction helps manage limited KV cache memory.
+
+P Compare the large PDF upload with the three small PDF uploads.
+P What would the visualizer show about token count, prefill latency, cache growth, and reuse?
+P Give a final summary of the cache behavior in this workload.
