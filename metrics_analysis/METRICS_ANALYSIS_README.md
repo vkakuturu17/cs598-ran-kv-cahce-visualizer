@@ -8,7 +8,7 @@ recomputed.
 ### Project layout
 
 ```
-kv-cache-viz/
+metrics_analysis/
 ├── input/                          # one JSON file per workload definition
 │   ├── cold_misses.json            # 10 unique prompts — cache miss baseline
 │   ├── prefix_reuse.json           # 8 prompts sharing a paragraph prefix
