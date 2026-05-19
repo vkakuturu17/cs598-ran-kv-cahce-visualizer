@@ -26,6 +26,7 @@ class VLLMEngine:
             gpu_memory_utilization=gpu_memory_utilization,
             num_gpu_blocks_override=num_gpu_blocks_override,
             max_model_len=max_model_len,
+            max_num_seqs=1,
             kv_events_config=kv_events_config,
         )
 

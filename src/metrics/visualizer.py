@@ -356,6 +356,44 @@ def render_html_report(
                 gap: 16px;
                 margin-bottom: 20px;
             }}
+            .chart-panel {{
+                margin-bottom: 20px;
+            }}
+            .chart-wrap {{
+                position: relative;
+                height: 160px;
+                background: #101926;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 10px 12px;
+            }}
+            .chart-wrap svg {{
+                width: 100%;
+                height: 100%;
+                display: block;
+            }}
+            .chart-axis {{
+                stroke: #2a3a4f;
+                stroke-width: 1;
+                fill: none;
+            }}
+            .chart-line {{
+                stroke: var(--accent);
+                stroke-width: 2;
+                fill: none;
+            }}
+            .chart-marker {{
+                fill: var(--accent-warm);
+                stroke: #1f2937;
+                stroke-width: 1;
+            }}
+            .chart-legend {{
+                display: flex;
+                justify-content: space-between;
+                font-size: 12px;
+                color: var(--muted);
+                margin-top: 8px;
+            }}
             .block-grid {{
                 display: grid;
                 grid-template-columns: repeat(var(--cols, 12), 1fr);
@@ -517,7 +555,7 @@ def render_html_report(
 
             <section class=\"cards\">
                 <div class=\"card\"><h3>Current Live</h3><strong id=\"card-live\">0</strong></div>
-                <div class=\"card\"><h3>Current Fill %</h3><strong id=\"card-fill-rate\">0%</strong></div>
+                <div class=\"card\"><h3>Fill Event %</h3><strong id=\"card-fill-rate\">0%</strong></div>
                 <div class=\"card\"><h3>Event Index</h3><strong id=\"card-index\">0</strong></div>
             </section>
 
@@ -541,6 +579,22 @@ def render_html_report(
                     Tokens in event: <span id=\"current-token-count\">0</span>
                 </div>
             </section>
+
+                <section class="panel chart-panel">
+                    <h3>Fill % over time</h3>
+                    <div class="chart-wrap">
+                        <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                            <path class="chart-axis" d="M0 39.5 H100" />
+                            <path class="chart-line" id="fill-path" d="" />
+                            <circle class="chart-marker" id="fill-marker" cx="0" cy="40" r="1.6" />
+                        </svg>
+                    </div>
+                    <div class="chart-legend">
+                        <span>Start</span>
+                        <span id="fill-chart-value">0%</span>
+                        <span>End</span>
+                    </div>
+                </section>
 
             <section class=\"panel-row\">
                 <div class=\"panel\">
@@ -707,6 +761,9 @@ def render_html_report(
             let fills = 0;
             let evicts = 0;
             const capacityBlocks = summary.kv_capacity_blocks || null;
+            const fillChartValue = document.getElementById("fill-chart-value");
+            const fillPath = document.getElementById("fill-path");
+            const fillMarker = document.getElementById("fill-marker");
             const slotForBlock = new Map();
             const slotOrder = [];
             const freeSlots = capacityBlocks ? Array.from({ length: capacityBlocks }, (_, i) => i) : [];
@@ -768,6 +825,22 @@ def render_html_report(
                     slotMapByIndex.push(slotMap);
                 }
             });
+
+            const fillSeries = cumFills.map((count, idx) => count / Math.max(1, idx + 1));
+            const buildFillPath = () => {
+                if (!fillSeries.length) {
+                    fillPath.setAttribute("d", "");
+                    return;
+                }
+                const lastIndex = Math.max(fillSeries.length - 1, 1);
+                const points = fillSeries.map((value, idx) => {
+                    const x = (idx / lastIndex) * 100;
+                    const y = 40 - value * 40;
+                    return x.toFixed(2) + " " + y.toFixed(2);
+                });
+                fillPath.setAttribute("d", "M" + points.join(" L"));
+            };
+            buildFillPath();
 
             const kvTooltip = document.getElementById("kv-tooltip");
             let currentEventIndex = 0;
@@ -894,6 +967,13 @@ def render_html_report(
                 document.getElementById("card-live").textContent = String(liveBlocks[index] || 0);
                 const fillRate = (cumFills[index] / Math.max(1, index + 1)) * 100;
                 document.getElementById("card-fill-rate").textContent = fillRate.toFixed(1) + "%";
+                const seriesValue = fillSeries[index] || 0;
+                fillChartValue.textContent = (seriesValue * 100).toFixed(1) + "%";
+                const seriesIndexMax = Math.max(fillSeries.length - 1, 1);
+                const markerX = (index / seriesIndexMax) * 100;
+                const markerY = 40 - seriesValue * 40;
+                fillMarker.setAttribute("cx", markerX.toFixed(2));
+                fillMarker.setAttribute("cy", markerY.toFixed(2));
 
                 tokenSourceCurrent.textContent = "Event " + String(index);
                 renderTokenList(tokenListCurrent, event.token_ids || []);

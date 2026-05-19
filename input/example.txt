@@ -1,4 +1,4 @@
-# Example input for kv-cache-studio
+# Example input
 # Each non-blank line: <TYPE> <content>
 # P = paragraph (plain text sent as a user message)
 # U = upload a PDF (path); text is extracted and sent as the user message
