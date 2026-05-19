@@ -1,0 +1,15 @@
+# Example input for kv-cache-studio
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+# U = upload a PDF (path); text is extracted and sent as the user message
+
+P What is the KV cache in the context of large language model inference?
+P How does prefix caching reduce prefill latency for multi-turn conversations?
+P Give a concrete example of a workload that benefits most from prefix caching.
+P Contrast that with a workload where prefix caching helps almost not at all.
+P How does vLLM implement prefix caching internally — what data structures does it use?
+P What determines the block size for KV cache blocks in vLLM, and what are the tradeoffs of larger vs smaller blocks?
+P How is cache eviction triggered, and which blocks get evicted first?
+P What is the tradeoff between reserving more GPU memory for the KV cache versus leaving more for model weights and activations?
+P How does the number of attention heads and layers in a model affect the memory footprint of the KV cache?
+P Summarize all the key concepts we have discussed about KV caching in LLM inference.

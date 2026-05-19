@@ -1,7 +1,10 @@
 import argparse
+import sys
 from pathlib import Path
+from typing import Any
 
 from transformers import AutoTokenizer
+from pypdf import PdfReader
 
 from src.inference.engine import VLLMEngine
 from src.metrics.collector import KVEventCollector
@@ -59,6 +62,73 @@ def get_prompts(profile: str, num_prompts: int) -> list[str]:
         f"{shared_prefix}{long_context}Task: {tasks[i % len(tasks)]}"
         for i in range(num_prompts)
     ]
+
+
+_SUPPORTED_INPUT_TYPES = {"P", "U"}
+
+
+def _parse_inputs(path: Path) -> list[tuple[str, str]]:
+    """Return a list of (type, content) pairs from the input file.
+
+    Each non-blank, non-comment line must start with a known type identifier
+    followed by a space and the content:
+        P Tell me about prefix caching.
+    """
+    inputs: list[tuple[str, str]] = []
+    for lineno, raw in enumerate(path.read_text().splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if len(line) < 3 or line[1] != " ":
+            sys.exit(f"{path}:{lineno}: expected '<TYPE> <content>', got: {raw!r}")
+        kind, content = line[0].upper(), line[2:].strip()
+        if kind not in _SUPPORTED_INPUT_TYPES:
+            sys.exit(
+                f"{path}:{lineno}: unknown input type {kind!r}. "
+                f"Supported: {', '.join(sorted(_SUPPORTED_INPUT_TYPES))}"
+            )
+        if not content:
+            sys.exit(f"{path}:{lineno}: empty content after type identifier")
+        inputs.append((kind, content))
+    return inputs
+
+
+def _extract_pdf_text(pdf_path: Path) -> str:
+    reader = PdfReader(pdf_path)
+    pages = [page.extract_text() or "" for page in reader.pages]
+    return "\n\n".join(pages).strip()
+
+
+def _build_pdf_message(pdf_path: Path) -> str:
+    text = _extract_pdf_text(pdf_path)
+    return f"[Uploaded document: {pdf_path.name}]\n\n{text}"
+
+
+def load_inputs(path: Path) -> list[str]:
+    if not path.is_file():
+        sys.exit(f"Input file not found: {path}")
+
+    turns = _parse_inputs(path)
+    if not turns:
+        sys.exit(f"No inputs found in {path}")
+
+    prompts: list[str] = []
+    for kind, content in turns:
+        if kind == "U":
+            pdf_path = Path(content)
+            if not pdf_path.is_file():
+                sys.exit(f"PDF not found: {content}")
+            prompts.append(_build_pdf_message(pdf_path))
+        else:
+            prompts.append(content)
+    return prompts
+
+
+def _build_preview(text: str, limit: int = 140) -> str:
+    collapsed = " ".join(text.split())
+    if len(collapsed) <= limit:
+        return collapsed
+    return collapsed[: limit - 3] + "..."
 
 
 def main() -> None:
@@ -122,6 +192,16 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--inputs",
+        type=Path,
+        default=None,
+        help=(
+            "Optional input file. Each non-blank line: '<TYPE> <content>'. "
+            "Supported types: P (paragraph text), U (PDF file path). "
+            "Lines starting with # are comments."
+        ),
+    )
+    parser.add_argument(
         "--prompt-profile",
         type=str,
         default="default",
@@ -158,7 +238,10 @@ def main() -> None:
     if args.max_model_len is not None and args.max_model_len < 1:
         raise ValueError("--max-model-len must be >= 1.")
 
-    prompts = get_prompts(args.prompt_profile, args.num_prompts)
+    if args.inputs is not None:
+        prompts = load_inputs(args.inputs)
+    else:
+        prompts = get_prompts(args.prompt_profile, args.num_prompts)
 
     collector = KVEventCollector(endpoint=args.endpoint_connect, topic=args.topic)
     collector.start()
@@ -173,7 +256,45 @@ def main() -> None:
         max_model_len=args.max_model_len,
     )
 
-    outputs = engine.generate(prompts, max_tokens=args.max_tokens)
+    tokenizer = None
+    if not args.no_token_decode:
+        tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
+
+    outputs: list[str] = []
+    turn_windows: list[tuple[int, int]] = []
+    turns: list[dict[str, Any]] = []
+
+    for i, prompt in enumerate(prompts):
+        start_idx = len(collector.events)
+        out = engine.generate([prompt], max_tokens=args.max_tokens)[0]
+        outputs.append(out)
+
+        collector.wait_until_events(min_events=start_idx + 1, timeout_s=2.0)
+        end_idx = len(collector.events)
+        turn_windows.append((start_idx, end_idx))
+
+        prompt_tokens = 0
+        generated_tokens = 0
+        if tokenizer is not None:
+            prompt_tokens = len(tokenizer.encode(prompt, add_special_tokens=False))
+            generated_tokens = len(tokenizer.encode(out, add_special_tokens=False))
+
+        turns.append(
+            {
+                "turn": i + 1,
+                "input_preview": _build_preview(prompt),
+                "prompt_tokens": prompt_tokens,
+                "cached_tokens": 0,
+                "computed_tokens": 0,
+                "generated_tokens": generated_tokens,
+                "cache_hit_rate": 0.0,
+                "kv_cache_utilization": 0.0,
+                "ttft_s": 0.0,
+                "e2e_latency_s": 0.0,
+                "event_index_start": start_idx,
+                "event_index_end": end_idx,
+            }
+        )
 
     for i, out in enumerate(outputs):
         print(f"\nPrompt {i}: {prompts[i]}")
@@ -183,14 +304,16 @@ def main() -> None:
     collector.stop()
     collector.write_jsonl(args.events_out)
 
-    lifecycle, summary = build_token_lifecycle(collector.events)
+    lifecycle, summary = build_token_lifecycle(
+        collector.events,
+        turn_windows=turn_windows,
+    )
 
     if args.num_gpu_blocks_override is not None:
         summary["kv_capacity_blocks"] = args.num_gpu_blocks_override
 
     token_decode_lookup = None
-    if not args.no_token_decode:
-        tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
+    if tokenizer is not None:
         all_token_ids = {
             token_id
             for event in lifecycle
@@ -206,6 +329,8 @@ def main() -> None:
         summary=summary,
         output_html=args.html_out,
         token_decode_lookup=token_decode_lookup,
+        turns=turns,
+        model_name=args.model,
     )
 
     print(f"\nWrote raw events to: {args.events_out}")

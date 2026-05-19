@@ -37,6 +37,30 @@ Optional flags:
 - `--topic kv-events`
 - `--no-token-decode` (skip tokenizer decoding for token labels)
 - `--gpu-memory-utilization 0.9` (lower this on busy/shared GPUs if vLLM startup fails due limited free VRAM)
+- `--inputs /path/to/inputs.txt` (load prompts from a file; overrides `--prompt-profile` and `--num-prompts`)
+
+## Input file format (optional)
+
+If you pass `--inputs`, each non-blank line must be:
+
+```
+<TYPE> <content>
+```
+
+Supported types:
+
+- `P` plain text prompt
+- `U` PDF file path (text is extracted and prefixed with `[Uploaded document: NAME]`)
+
+Lines starting with `#` are treated as comments.
+
+Example:
+
+```
+P What is KV cache in the context of large language models?
+U /path/to/paper.pdf
+P Summarize the main claims and list two experiments to validate them.
+```
 
 ## Notes
 

@@ -7,3 +7,4 @@ plotly
 requests
 pandas
 matplotlib
+pypdf>=5.0

@@ -1,3 +1,7 @@
+"""Token-level lifecycle reconstruction + HTML report rendering."""
+
+from __future__ import annotations
+
 import json
 from collections import Counter
 from pathlib import Path
@@ -13,16 +17,34 @@ def _safe_token_label(token_id: int, decoded_lookup: dict[int, str] | None) -> s
 
 def build_token_lifecycle(
     events: list[dict[str, Any]],
+    turn_windows: list[tuple[int, int]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Reconstruct fill/evict lifecycle per token block from raw KV events.
+
+    If `turn_windows` is provided (one (start, end) tuple per turn, indexing
+    into the raw `event_index` field), each lifecycle event gets a `turn`
+    field identifying which chat turn produced it (1-indexed, 0 for any
+    event outside all windows, e.g., engine warmup).
+    """
     block_to_tokens: dict[str, list[int]] = {}
     lifecycle: list[dict[str, Any]] = []
 
     fills = 0
     evictions = 0
 
+    def _turn_for(event_index: int) -> int:
+        if not turn_windows:
+            return 0
+        for turn_idx, (start, end) in enumerate(turn_windows, start=1):
+            if start <= event_index < end:
+                return turn_idx
+        return 0
+
     for item in events:
         event = item["event"]
         event_type = event.get("type")
+        raw_event_index = item["event_index"]
+        turn = _turn_for(raw_event_index)
 
         if event_type == "AllBlocksCleared":
             block_to_tokens.clear()
@@ -42,7 +64,7 @@ def build_token_lifecycle(
 
                 lifecycle.append(
                     {
-                        "event_index": item["event_index"],
+                        "event_index": raw_event_index,
                         "timestamp": item["timestamp"],
                         "sequence": item.get("sequence"),
                         "data_parallel_rank": item.get("data_parallel_rank"),
@@ -51,6 +73,7 @@ def build_token_lifecycle(
                         "token_ids": block_tokens,
                         "group_idx": event.get("group_idx"),
                         "medium": event.get("medium"),
+                        "turn": turn,
                     }
                 )
 
@@ -60,7 +83,7 @@ def build_token_lifecycle(
                 evicted_tokens = block_to_tokens.pop(block_hash, [])
                 lifecycle.append(
                     {
-                        "event_index": item["event_index"],
+                        "event_index": raw_event_index,
                         "timestamp": item["timestamp"],
                         "sequence": item.get("sequence"),
                         "data_parallel_rank": item.get("data_parallel_rank"),
@@ -69,6 +92,7 @@ def build_token_lifecycle(
                         "token_ids": evicted_tokens,
                         "group_idx": event.get("group_idx"),
                         "medium": event.get("medium"),
+                        "turn": turn,
                     }
                 )
 
@@ -86,7 +110,10 @@ def render_html_report(
     summary: dict[str, int],
     output_html: str | Path,
     token_decode_lookup: dict[int, str] | None = None,
+    turns: list[dict[str, Any]] | None = None,
+    model_name: str | None = None,
 ) -> None:
+    """Render an interactive HTML report."""
     output_html = Path(output_html)
     output_html.parent.mkdir(parents=True, exist_ok=True)
 
@@ -109,6 +136,8 @@ def render_html_report(
         "top_evicted_tokens": top_evicted,
         "lifecycle": lifecycle,
         "token_decode_lookup": token_decode_lookup or {},
+        "turns": turns or [],
+        "model_name": model_name or "",
     }
 
     payload_blob = json.dumps(payload, ensure_ascii=True).replace("</", "<\\/")
@@ -118,7 +147,7 @@ def render_html_report(
     <head>
         <meta charset=\"utf-8\" />
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-        <title>KV Cache Report</title>
+        <title>KV Cache Studio</title>
         <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />
         <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />
         <link
@@ -136,11 +165,12 @@ def render_html_report(
                 --muted: #9fb0c0;
                 --accent: #2fb8ac;
                 --accent-warm: #f59e0b;
+                --turn-active: #6366f1;
             }}
             * {{ box-sizing: border-box; }}
             body {{
                 margin: 0;
-                font-family: "Barlow", system-ui, sans-serif;
+                font-family: \"Barlow\", system-ui, sans-serif;
                 background: radial-gradient(circle at top left, #15202c, var(--bg));
                 color: var(--text);
             }}
@@ -193,7 +223,7 @@ def render_html_report(
                 letter-spacing: 0.14em;
             }}
             .meta-item strong {{
-                font-family: "JetBrains Mono", monospace;
+                font-family: \"JetBrains Mono\", monospace;
                 font-size: 20px;
             }}
             .cards {{
@@ -218,9 +248,61 @@ def render_html_report(
                 color: var(--muted);
             }}
             .card strong {{
-                font-family: "JetBrains Mono", monospace;
+                font-family: \"JetBrains Mono\", monospace;
                 font-size: 22px;
                 color: var(--accent);
+            }}
+            .turn-strip {{
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                padding: 4px 2px 14px;
+                margin-bottom: 18px;
+            }}
+            .turn-card {{
+                min-width: 220px;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 12px 14px;
+                animation: fadeIn 0.6s ease;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                cursor: pointer;
+            }}
+            .turn-card.active {{
+                border-color: var(--turn-active);
+                box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
+            }}
+            .turn-card .turn-head {{
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                margin-bottom: 8px;
+            }}
+            .turn-card .turn-head strong {{
+                font-size: 14px;
+                color: var(--accent);
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }}
+            .turn-card .turn-head span {{
+                font-family: \"JetBrains Mono\", monospace;
+                color: var(--muted);
+                font-size: 12px;
+            }}
+            .turn-card dl {{
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 4px 10px;
+                margin: 0;
+                font-size: 12px;
+            }}
+            .turn-card dt {{ color: var(--muted); }}
+            .turn-card dd {{
+                margin: 0;
+                font-family: \"JetBrains Mono\", monospace;
+                color: var(--text);
+                text-align: right;
             }}
             .controls {{
                 display: grid;
@@ -257,9 +339,20 @@ def render_html_report(
                 color: var(--muted);
                 font-size: 13px;
             }}
-            .grid {{
+            .turn-pill {{
+                display: inline-block;
+                font-family: \"JetBrains Mono\", monospace;
+                background: rgba(99, 102, 241, 0.18);
+                color: #c7d2fe;
+                border: 1px solid rgba(99, 102, 241, 0.5);
+                border-radius: 999px;
+                padding: 2px 8px;
+                font-size: 11px;
+                margin-left: 8px;
+            }}
+            .panel-row {{
                 display: grid;
-                grid-template-columns: 1.6fr 1fr;
+                grid-template-columns: repeat(3, 1fr);
                 gap: 16px;
                 margin-bottom: 20px;
             }}
@@ -304,7 +397,7 @@ def render_html_report(
             }}
             .kv-list span {{
                 color: var(--text);
-                font-family: "JetBrains Mono", monospace;
+                font-family: \"JetBrains Mono\", monospace;
             }}
             .token-list {{
                 display: flex;
@@ -339,7 +432,7 @@ def render_html_report(
                 border-radius: 999px;
                 padding: 4px 8px;
                 background: #101926;
-                font-family: "JetBrains Mono", monospace;
+                font-family: \"JetBrains Mono\", monospace;
             }}
             .top-tokens {{
                 display: grid;
@@ -354,7 +447,44 @@ def render_html_report(
             }}
             .top-tokens li span {{
                 color: var(--text);
-                font-family: "JetBrains Mono", monospace;
+                font-family: \"JetBrains Mono\", monospace;
+            }}
+            .kv-block-scroll {{
+                max-height: 420px;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }}
+            .turn-preview {{
+                font-size: 11px;
+                color: var(--muted);
+                font-style: italic;
+                margin-bottom: 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+            .kv-tooltip {{
+                position: fixed;
+                z-index: 200;
+                background: #1a2d3f;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 10px 12px;
+                font-size: 12px;
+                color: var(--text);
+                pointer-events: none;
+                display: none;
+                max-width: 300px;
+                white-space: pre-wrap;
+                word-break: break-word;
+                line-height: 1.6;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            }}
+            .kv-tooltip strong {{
+                display: block;
+                color: var(--accent);
+                margin-bottom: 4px;
+                font-family: \"JetBrains Mono\", monospace;
             }}
             @keyframes fadeIn {{
                 from {{ opacity: 0; transform: translateY(6px); }}
@@ -364,21 +494,22 @@ def render_html_report(
                 .header {{ grid-template-columns: 1fr; }}
                 .meta {{ grid-template-columns: repeat(2, 1fr); }}
                 .cards {{ grid-template-columns: repeat(2, 1fr); }}
-                .grid {{ grid-template-columns: 1fr; }}
+                .panel-row {{ grid-template-columns: 1fr; }}
                 .controls {{ grid-template-columns: 1fr; }}
             }}
         </style>
     </head>
     <body>
+        <div id=\"kv-tooltip\" class=\"kv-tooltip\"></div>
         <div class=\"page\">
             <header class=\"header\">
                 <div>
-                    <div class=\"eyebrow\">KV Cache Visualizer</div>
-                    <h1>Post-run Analysis</h1>
-                    <p class=\"sub\">Step through KV cache fills and evictions captured from vLLM.</p>
+                    <div class=\"eyebrow\">KV Cache Studio</div>
+                    <h1>Multi-turn KV Cache Analysis</h1>
+                    <p class=\"sub\" id=\"sub-line\">Step through KV cache fills and evictions captured from vLLM, turn by turn.</p>
                 </div>
                 <div class=\"meta\">
-                    <div class=\"meta-item\"><span>Batches</span><strong id=\"meta-batches\">0</strong></div>
+                    <div class=\"meta-item\"><span>Turns</span><strong id=\"meta-turns\">0</strong></div>
                     <div class=\"meta-item\"><span>Lifecycle Events</span><strong id=\"meta-events\">0</strong></div>
                     <div class=\"meta-item\"><span>Live Blocks</span><strong id=\"meta-live\">0</strong></div>
                 </div>
@@ -389,6 +520,8 @@ def render_html_report(
                 <div class=\"card\"><h3>Current Fill %</h3><strong id=\"card-fill-rate\">0%</strong></div>
                 <div class=\"card\"><h3>Event Index</h3><strong id=\"card-index\">0</strong></div>
             </section>
+
+            <section id=\"turn-strip\" class=\"turn-strip\"></section>
 
             <section class=\"controls\">
                 <div>
@@ -401,6 +534,7 @@ def render_html_report(
                     <div class=\"control-readout\">
                         Event <span id=\"current-index\">0</span> / <span id=\"max-index\">0</span> &middot;
                         <span id=\"current-time\">--</span>
+                        <span id=\"current-turn-pill\" class=\"turn-pill\" style=\"display:none;\">Turn --</span>
                     </div>
                 </div>
                 <div class=\"control-readout\">
@@ -408,14 +542,11 @@ def render_html_report(
                 </div>
             </section>
 
-            <section class=\"grid\">
-                <div class=\"panel\">
-                    <h3>KV Blocks <span style=\"color: var(--muted);\" id=\"block-capacity\"></span></h3>
-                    <div id=\"block-grid\" class=\"block-grid\"></div>
-                </div>
+            <section class=\"panel-row\">
                 <div class=\"panel\">
                     <h3>Current Event</h3>
                     <div class=\"kv-list\">
+                        <div>Turn</div><span id=\"detail-turn\">--</span>
                         <div>Action</div><span id=\"detail-action\">--</span>
                         <div>Block Hash</div><span id=\"detail-block\">--</span>
                         <div>Group</div><span id=\"detail-group\">--</span>
@@ -431,9 +562,6 @@ def render_html_report(
                         <div>Live Blocks</div><span id=\"detail-live\">0</span>
                     </div>
                 </div>
-            </section>
-
-            <section class=\"grid\">
                 <div class=\"panel\">
                     <h3>Block Tokens</h3>
                     <div class=\"token-compare\">
@@ -473,6 +601,13 @@ def render_html_report(
                     </div>
                 </div>
             </section>
+
+            <div class=\"panel\" style=\"margin-bottom: 20px;\">
+                <h3>KV Blocks <span style=\"color: var(--muted);\" id=\"block-capacity\"></span></h3>
+                <div class=\"kv-block-scroll\">
+                    <div id=\"block-grid\" class=\"block-grid\"></div>
+                </div>
+            </div>
         </div>
 
         <script id=\"kv-data\" type=\"application/json\">{payload_blob}</script>
@@ -481,24 +616,24 @@ def render_html_report(
             const lifecycle = payload.lifecycle || [];
             const tokenLookup = payload.token_decode_lookup || {};
             const summary = payload.summary || {};
+            const turns = payload.turns || [];
+            const modelName = payload.model_name || "";
+
+            if (modelName) {
+                document.getElementById("sub-line").textContent =
+                    "Model: " + modelName + " — step through KV cache fills and evictions, turn by turn.";
+            }
 
             const formatValue = (value) => (value === null || value === undefined ? "n/a" : String(value));
             const formatTime = (ts) => (ts ? ts.toFixed(3) + " s" : "--");
+            const formatPct = (v) => (v * 100).toFixed(1) + "%";
             const tokenLabel = (tokenId) => {
                 const decoded = tokenLookup[String(tokenId)] ?? tokenLookup[tokenId];
                 if (decoded === undefined) return String(tokenId);
-                return tokenId + ": " + String(decoded).replace(/\\n/g, "\\n");
-            };
-            const tokenPreview = (tokenIds, maxTokens) => {
-                const slice = tokenIds.slice(0, maxTokens);
-                let label = slice.map(tokenLabel).join(", ");
-                if (tokenIds.length > maxTokens) {
-                    label += ", ... +" + (tokenIds.length - maxTokens);
-                }
-                return label;
+                return tokenId + ": " + String(decoded).replace(/\\n/g, "\\\\n");
             };
 
-            document.getElementById("meta-batches").textContent = formatValue(summary.num_batches);
+            document.getElementById("meta-turns").textContent = String(turns.length);
             document.getElementById("meta-events").textContent = lifecycle.length;
             document.getElementById("meta-live").textContent = formatValue(summary.num_live_blocks);
             document.getElementById("stat-fills").textContent = formatValue(summary.num_fills);
@@ -509,6 +644,55 @@ def render_html_report(
             const maxIndex = Math.max(lifecycle.length - 1, 0);
             slider.max = String(maxIndex);
             document.getElementById("max-index").textContent = String(maxIndex);
+
+            const escHtml = (s) => String(s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;");
+
+            const turnStrip = document.getElementById("turn-strip");
+            const turnCards = [];
+            turns.forEach((t) => {
+                const card = document.createElement("div");
+                card.className = "turn-card";
+                card.dataset.turn = String(t.turn);
+                const preview = t.input_preview || "";
+                const previewHtml = preview
+                    ? '<div class="turn-preview" title="' + escHtml(preview) + '">' + escHtml(preview) + '</div>'
+                    : "";
+                card.innerHTML = (
+                    previewHtml +
+                    '<div class="turn-head"><strong>Turn ' + String(t.turn) + '</strong>' +
+                    '<span>' + (t.prompt_tokens || 0) + ' prompt</span></div>' +
+                    '<dl>' +
+                    '<dt>Hit rate</dt><dd>' + formatPct(t.cache_hit_rate || 0) + '</dd>' +
+                    '<dt>Cached / Comp</dt><dd>' + (t.cached_tokens || 0) + ' / ' + (t.computed_tokens || 0) + '</dd>' +
+                    '<dt>Generated</dt><dd>' + (t.generated_tokens || 0) + '</dd>' +
+                    '<dt>KV pool</dt><dd>' + formatPct(t.kv_cache_utilization || 0) + '</dd>' +
+                    '<dt>TTFT</dt><dd>' + (t.ttft_s || 0).toFixed(3) + 's</dd>' +
+                    '<dt>E2E</dt><dd>' + (t.e2e_latency_s || 0).toFixed(2) + 's</dd>' +
+                    '</dl>'
+                );
+                card.addEventListener("click", () => {
+                    const start = t.event_index_start || 0;
+                    const end = t.event_index_end || null;
+                    let target = -1;
+                    if (end !== null) {
+                        for (let idx = lifecycle.length - 1; idx >= 0; idx -= 1) {
+                            if (lifecycle[idx].event_index < end) {
+                                target = idx;
+                                break;
+                            }
+                        }
+                    }
+                    if (target < 0) {
+                        target = lifecycle.findIndex((ev) => ev.event_index >= start);
+                    }
+                    if (target >= 0) updateEvent(target);
+                });
+                turnStrip.appendChild(card);
+                turnCards.push(card);
+            });
 
             const cumFills = [];
             const cumEvicts = [];
@@ -585,8 +769,18 @@ def render_html_report(
                 }
             });
 
+            const kvTooltip = document.getElementById("kv-tooltip");
+            let currentEventIndex = 0;
+
+            const getBlockHashAtSlot = (slotIndex, eventIndex) => {
+                if (capacityBlocks) {
+                    const slotMap = slotMapByIndex[eventIndex];
+                    return slotMap ? slotMap.get(slotIndex) : null;
+                }
+                return blockOrder[slotIndex] || null;
+            };
+
             const blockGrid = document.getElementById("block-grid");
-            const maxLive = liveBlocks.length ? Math.max(...liveBlocks) : 0;
             const totalBlocks = Math.max(capacityBlocks || blockOrder.length, 1);
             const gridColumns = Math.min(16, Math.max(6, Math.ceil(Math.sqrt(totalBlocks))));
             blockGrid.style.setProperty("--cols", String(gridColumns));
@@ -599,7 +793,6 @@ def render_html_report(
             for (let i = 0; i < totalCells; i += 1) {
                 const cell = document.createElement("div");
                 cell.className = "block-cell";
-                cell.title = "Block " + String(i + 1);
                 cell.addEventListener("click", () => {
                     if (selectedBlockIndex === i) {
                         selectedBlockIndex = null;
@@ -607,6 +800,29 @@ def render_html_report(
                         selectedBlockIndex = i;
                     }
                     updateEvent(Number(slider.value));
+                });
+                cell.addEventListener("mousemove", (e) => {
+                    if (!cell.classList.contains("filled")) {
+                        kvTooltip.style.display = "none";
+                        return;
+                    }
+                    const blockHash = getBlockHashAtSlot(i, currentEventIndex);
+                    const tokens = blockHash ? (blockTokensByHash.get(blockHash) || []) : [];
+                    if (tokens.length === 0) {
+                        kvTooltip.style.display = "none";
+                        return;
+                    }
+                    const preview = tokens.slice(0, 10).map(tokenLabel).join(",  ");
+                    const more = tokens.length > 10 ? "\\n+ " + (tokens.length - 10) + " more" : "";
+                    kvTooltip.innerHTML = "<strong>Block " + String(i + 1) + " · " + tokens.length + " tokens</strong>" + preview + more;
+                    const x = e.clientX + 14;
+                    const y = e.clientY - 10;
+                    kvTooltip.style.left = x + "px";
+                    kvTooltip.style.top = y + "px";
+                    kvTooltip.style.display = "block";
+                });
+                cell.addEventListener("mouseleave", () => {
+                    kvTooltip.style.display = "none";
                 });
                 blockGrid.appendChild(cell);
                 gridCells.push(cell);
@@ -642,14 +858,29 @@ def render_html_report(
                 });
             };
 
+            const currentTurnPill = document.getElementById("current-turn-pill");
+            const highlightTurn = (turnNumber) => {
+                turnCards.forEach((card) => {
+                    card.classList.toggle("active", Number(card.dataset.turn) === turnNumber);
+                });
+                if (turnNumber > 0) {
+                    currentTurnPill.textContent = "Turn " + String(turnNumber);
+                    currentTurnPill.style.display = "inline-block";
+                } else {
+                    currentTurnPill.style.display = "none";
+                }
+            };
+
             const updateEvent = (index) => {
                 const event = lifecycle[index];
                 if (!event) return;
+                currentEventIndex = index;
                 slider.value = String(index);
                 document.getElementById("current-index").textContent = String(index);
                 document.getElementById("card-index").textContent = String(index);
                 document.getElementById("current-time").textContent = formatTime(event.timestamp);
                 document.getElementById("current-token-count").textContent = String((event.token_ids || []).length);
+                document.getElementById("detail-turn").textContent = event.turn ? String(event.turn) : "warmup";
                 document.getElementById("detail-action").textContent = formatValue(event.action);
                 document.getElementById("detail-block").textContent = formatValue(event.block_hash);
                 document.getElementById("detail-group").textContent = formatValue(event.group_idx);
@@ -661,11 +892,12 @@ def render_html_report(
                 document.getElementById("detail-evicts").textContent = String(cumEvicts[index] || 0);
                 document.getElementById("detail-live").textContent = String(liveBlocks[index] || 0);
                 document.getElementById("card-live").textContent = String(liveBlocks[index] || 0);
-                const fillRate = event.action === "fill" ? ((cumFills[index] / Math.max(1, index + 1)) * 100) : ((cumFills[index] / Math.max(1, index + 1)) * 100);
+                const fillRate = (cumFills[index] / Math.max(1, index + 1)) * 100;
                 document.getElementById("card-fill-rate").textContent = fillRate.toFixed(1) + "%";
 
                 tokenSourceCurrent.textContent = "Event " + String(index);
                 renderTokenList(tokenListCurrent, event.token_ids || []);
+                highlightTurn(event.turn || 0);
 
                 if (selectedBlockIndex !== null) {
                     let blockHash = null;
