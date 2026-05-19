@@ -1,0 +1,12 @@
+# Multi-turn chat scenario
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+
+P You are a helpful assistant. We are discussing KV cache basics for LLM inference.
+P First, explain the purpose of a KV cache in one paragraph.
+P Now give a concrete example of cache reuse in a chat setting (2-3 sentences).
+P Now explain what happens when the cache is full and needs eviction, in one paragraph.
+P Now summarize the three points in 3 bullet points.
+P Now restate the summary in one sentence.
+P Now answer: why does prefix reuse matter more than repeated suffixes? Use two sentences.
+P Finally, give a 4-sentence recap for a student.

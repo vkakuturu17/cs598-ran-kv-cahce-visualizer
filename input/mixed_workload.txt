@@ -1,0 +1,14 @@
+# Mixed workload scenario
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+
+P Define KV cache and why it helps decoding speed in one paragraph.
+P Explain why prefix caching is useful for chatbots in two sentences.
+P Summarize the causes of the French Revolution in 4-6 sentences.
+P Define KV cache and why it helps decoding speed.
+P Provide a short recipe for pancakes.
+P Explain why prefix caching is useful for chatbots, then give one downside.
+P Outline the steps of TCP connection setup in three sentences.
+P Define KV cache and why it helps decoding speed, then mention one tradeoff.
+P Summarize the causes of the French Revolution in two sentences.
+P Explain why prefix caching is useful for chatbots.

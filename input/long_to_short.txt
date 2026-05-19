@@ -1,0 +1,11 @@
+# Long-to-short reuse scenario
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+
+P You are writing a short guide about KV caches. Cover: what they store, when they are used, how eviction works, how block sizes affect reuse, and how prefix reuse changes prefill time. Write 10 sentences.
+P Summarize the guide in 2 sentences.
+P Summarize the guide in 1 sentence.
+P Summarize the guide in 3 sentences.
+P Summarize the guide in 2 sentences.
+P Summarize the guide in 1 sentence.
+P Summarize the guide in 2 sentences.

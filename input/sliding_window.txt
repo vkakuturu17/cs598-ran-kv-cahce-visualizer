@@ -1,0 +1,13 @@
+# Sliding window scenario
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+
+P The quick brown fox jumps over the lazy dog. Discuss the sentence in one paragraph and mention its pangram use.
+P quick brown fox jumps over the lazy dog. Explain in 2-3 sentences and mention it is a pangram.
+P brown fox jumps over the lazy dog. Explain in one sentence.
+P fox jumps over the lazy dog. Discuss the sentence in one paragraph and mention its pangram use.
+P jumps over the lazy dog. Explain in two sentences.
+P over the lazy dog. Explain in one sentence.
+P the lazy dog. Explain in two sentences and note the missing letters.
+P lazy dog. Explain in one sentence.
+P dog. Explain in one short sentence.

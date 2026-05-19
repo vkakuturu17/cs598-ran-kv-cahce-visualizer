@@ -1,0 +1,9 @@
+# Prefix reuse scenario
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+
+P You are an assistant. Summarize this project: it collects vLLM KV events, maps them to token lifecycles, and renders an HTML timeline. End with one sentence about what might be missing.
+P You are an assistant. Summarize this project: it collects vLLM KV events, maps them to token lifecycles, and renders an HTML timeline. Focus on how the event stream is consumed and why reconstruction is needed. End with one sentence about how you would validate the output.
+P You are an assistant. Summarize this project: it collects vLLM KV events, maps them to token lifecycles, and renders an HTML timeline. Focus on how the event stream is consumed, why reconstruction is needed, and how eviction signals are interpreted. End with one sentence about the limitations of eviction signals.
+P You are an assistant. Summarize this project: it collects vLLM KV events, maps them to token lifecycles, and renders an HTML timeline. Focus on the runtime flow from event publish to HTML render. End with one sentence about performance tradeoffs.
+P You are an assistant. Summarize this project: it collects vLLM KV events, maps them to token lifecycles, and renders an HTML timeline. Focus on a user perspective: how to run it and what artifact to open. End with one sentence about what you would check first if the output looks wrong.
