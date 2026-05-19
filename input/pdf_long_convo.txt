@@ -1,0 +1,39 @@
+# Example input for kv-cache-studio
+# Workload: one large PDF followed by multiple small PDFs
+# Purpose: compare cache pressure from a large document versus many smaller documents
+# Each non-blank line: <TYPE> <content>
+# P = paragraph (plain text sent as a user message)
+# U = upload a PDF (path); text is extracted and sent as the user message
+#
+# Replace these paths with your actual local PDF paths.
+
+P I am studying LLM inference and KV cache behavior. I will upload one large PDF first, then several smaller PDFs. Track how the context size and cache pressure change across the workload.
+
+U ./pdfs/large_transformer_survey.pdf
+P Summarize the large PDF in 8 bullet points.
+P Identify the sections of the large PDF that are most related to attention, inference, and memory usage.
+P Based on the large PDF, explain why long-context prompts create high KV cache memory pressure.
+
+U ./pdfs/small_vllm_notes.pdf
+P Summarize this small PDF and explain how it relates to the large PDF.
+P Compare the memory impact of this small PDF with the earlier large PDF.
+
+U ./pdfs/small_prefix_caching_notes.pdf
+P Summarize this small PDF and explain how prefix caching could help if users repeatedly ask about the same document.
+P Compare this small PDF with the vLLM notes PDF.
+
+U ./pdfs/small_lmcache_notes.pdf
+P Summarize this small PDF and explain how LMCache relates to KV cache reuse.
+P Compare LMCache with vLLM prefix caching.
+
+U ./pdfs/small_token_eviction_notes.pdf
+P Summarize this small PDF and explain how token eviction affects KV cache memory.
+P Compare token eviction with prefix caching.
+
+P Now compare the full workload: one large PDF versus several small PDFs.
+P Which part of this workload likely created the largest prefill cost?
+P Which part likely created the most KV cache memory pressure?
+P Which parts were most likely to benefit from prefix caching?
+P Which parts were least likely to benefit from prefix caching?
+P Explain what this workload should show in the KV cache visualizer.
+P Summarize the main lesson about large-document uploads versus many small-document uploads.
