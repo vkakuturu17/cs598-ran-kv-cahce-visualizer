@@ -10,6 +10,7 @@ Build on top of vLLM and visualize when KV cache blocks are filled and evicted.
 - Writes:
 	- raw event log: `artifacts/kv_events.jsonl`
 	- interactive HTML timeline: `artifacts/kv_cache_report.html`
+ - Includes an offline metrics analysis pipeline under `metrics_analysis/`.
 
 ## Install
 
@@ -42,3 +43,7 @@ Optional flags:
 - KV events are published by vLLM itself; this project consumes and visualizes them.
 - Eviction events do not carry token IDs directly in vLLM events, so this project
 	maps evicted block hashes back to tokens observed during prior fill events.
+
+## Metrics analysis
+
+For the offline metrics pipeline, see [metrics_analysis/METRICS_ANALYSIS_README.md](metrics_analysis/METRICS_ANALYSIS_README.md).

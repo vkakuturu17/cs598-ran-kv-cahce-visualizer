@@ -176,7 +176,7 @@ def plot(metrics: pd.DataFrame, reqs: pd.DataFrame, out_dir: Path):
 def plot_token_heatmap_from_results(reqs: pd.DataFrame, out_dir: Path, model: str, block_size: int):
     """Build token-level block map for every request and save as PNG."""
     try:
-        from token_mapper import TokenBlockMapper, plot_token_heatmap
+        from analyzer.token_mapper import TokenBlockMapper, plot_token_heatmap
     except ImportError:
         print("[visualize] token_mapper.py not found — skipping token heatmap.")
         return
